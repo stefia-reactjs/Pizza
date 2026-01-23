@@ -1,22 +1,19 @@
-import { useContext, useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
-import axios from 'axios'
 import Categories from '../components/Categories'
 import Sort from '../components/Sort'
 import PizzaBlock from '../components/PizzaBlock'
 import Skeleton from '../components/PizzaBlock/Skeleton'
 import Pagination from '../components/Pagination'
-import { SearchContext } from '../App'
 import { useSelector, useDispatch } from 'react-redux'
+import { selectFilter, setCategoryId, setCurrentPage } from '../redux/slices/filterSlice'
+import { fetchPizzas, selectPizzaData } from '../redux/slices/pizzaSlice'
 
-import { setCategoryId, setCurrentPage } from '../redux/slices/filterSlice'
 function Home() {
-  const { categoryId, sort, currentPage } = useSelector((state) => state.filter)
   const dispatch = useDispatch()
 
-  const { searchValue } = useContext(SearchContext)
-  const [items, setItems] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
+  const { items, status } = useSelector(selectPizzaData)
+  const { categoryId, sort, currentPage, searchValue } = useSelector(selectFilter)
 
   const onChangeCategory = (id) => {
     dispatch(setCategoryId(id))
@@ -24,22 +21,23 @@ function Home() {
   const onChangePage = (number) => {
     dispatch(setCurrentPage(number))
   }
-  useEffect(() => {
-    setIsLoading(true)
-
+  const getPizzas = async () => {
     const category = categoryId > 0 ? `category=${categoryId}` : ''
     const search = searchValue ? `search=${searchValue}` : ''
 
-    axios
-      .get(
-        `https://dc5d486244a8185f.mokky.dev/items?page=${currentPage}&limit=4&${category}&sortBy=${sort.sortProperty}${search}`,
-      )
-      .then((res) => {
-        setItems(res.data.items)
-        setIsLoading(false)
-      })
-
+    dispatch(
+      fetchPizzas({
+        category,
+        search,
+        currentPage,
+        sort,
+      }),
+    )
     window.scrollTo(0, 0)
+  }
+
+  useEffect(() => {
+    getPizzas()
   }, [categoryId, sort.sortProperty, searchValue, currentPage])
 
   const skeletons = [...new Array(6)].map((_, index) => <Skeleton key={index} />)
@@ -59,7 +57,14 @@ function Home() {
           <Sort />
         </div>
         <h2 className="content__title">Все пиццы</h2>
-        <div className="content__items">{isLoading ? skeletons : pizzas}</div>
+        {status === 'error' ? (
+          <div className="content__error-info">
+            <h2>Произошла ошибка</h2>
+            <p>К сожалению, не удалось получить пиццы. Попробуйте повторить позже.</p>
+          </div>
+        ) : (
+          <div className="content__items">{status === 'loading' ? skeletons : pizzas}</div>
+        )}
         <Pagination currentPage={currentPage} onChangePage={onChangePage} />
       </div>
     </>

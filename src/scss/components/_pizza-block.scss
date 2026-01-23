@@ -1,5 +1,7 @@
 @import '../variables';
-
+button {
+  all: unset;
+}
 .pizza-block {
   width: 280px;
   text-align: center;

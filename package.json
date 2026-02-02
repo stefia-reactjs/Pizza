@@ -1,6 +1,6 @@
 {
-  "name": "pizza-app",
-  "homepage": "https://stefia-js.github.io/Sneakers/",
+  "name": "pizzas",
+  "homepage": "https://stefia-js.github.io/Pizzas/",
   "private": true,
   "version": "0.0.0",
   "type": "module",
